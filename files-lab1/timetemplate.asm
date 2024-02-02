@@ -100,13 +100,13 @@ delay:
 	PUSH 	$a0
 		
 	move 	$t0, $a0	# Number of miliseconds
-	li	$t2, 4711	 # Delay constant
+	li	$t2, 5211	 # Delay constant
 	
-	beqz	$t0, exit
+	blez	$t0, exit
 	nop
 	
 whileloop:
-	subi 	$t0 ,$t0 1	# ms = ms - 1
+	addi 	$t0 ,$t0, -1	# ms = ms - 1
 	li 	$t3, 0	 # For loop count
 forloop:
 	addi 	$t3, $t3, 1	# i++
@@ -127,44 +127,44 @@ time2string:
 
     PUSH $s0 # we want to make sure s0 and s1 are restored
     PUSH $s1 # after the function has finished
-    PUSH $ra # we don't want to lose this after calling hexasc
+    PUSH $ra # Save the return address
 
     add $s0, $a0, $zero # storing arguments in s0 and s1 so they can be used
     add $s1, $a1, $zero # when calling hexasc without relying on the stack
 
     # m---- / mm:ss
-    andi $t0, $s1, 0xf000 # isolating
-    srl  $t0, $t0, 12     # shift to far right
-    add $a0, $t0, $zero   # setting argument
-    jal hexasc            # ascii will returned in v0
+    andi $t0, $s1, 0xf000 # Isolating
+    srl  $t0, $t0, 12     # Shift the value to the end
+    add $a0, $t0, $zero   # Move the value to hexasc
+    jal hexasc            # Convert value to ASCII character 
     nop
-    sb $v0, 0($s0)        # storing ascii character in timstr at index 0
+    sb $v0, 0($s0)        # Store character in timstr at index 0
 
-    # -m--- / mm:ss
-    andi $t0, $s1, 0x0f00 # isolating
-    srl  $t0, $t0, 8      # shift to far right
-    add $a0, $t0, $zero   # setting argument
-    jal hexasc            # ascii will returned in v0
+    # -m--- / mm:ss       Same as above
+    andi $t0, $s1, 0x0f00 # Take 3rd group of bits
+    srl  $t0, $t0, 8      
+    add $a0, $t0, $zero   
+    jal hexasc            
     nop
-    sb $v0, 1($s0)        # storing ascii character in timstr at index 1
+    sb $v0, 1($s0)        # Store in index 1
 
     # --:-- / mm:ss
-    li $t0, 0x3a          # storing colon ascii into t0
-    sb $t0, 2($s0)        # storing ascii character in timstr at index 2
+    li $t0, 0x3a          # Set t0 ASCII for ':'
+    sb $t0, 2($s0)        # Store in index 2
 
     # ---s- / mm:ss
-    andi $t0, $s1, 0x00f0 # isolating
-    srl  $t0, $t0, 4      # shift to far right
-    add $a0, $t0, $zero   # setting argument
-    jal hexasc            # ascii will returned in v0
+    andi $t0, $s1, 0x00f0 # 2nd group of bits
+    srl  $t0, $t0, 4      
+    add $a0, $t0, $zero   
+    jal hexasc            
     nop
-    sb $v0, 3($s0)        # storing ascii character in timstr at index 3
+    sb $v0, 3($s0)        # Store in index 3
 
     # ----s / mm:ss
-    andi $t0, $s1, 0x000f # isolating
-    srl  $t0, $t0, 0      # shift to far right
-    add $a0, $t0, $zero   # setting argument
-    jal hexasc            # ascii will returned in v0
+    andi $t0, $s1, 0x000f # Frist group of bits
+    			  # No need to shift now
+    add $a0, $t0, $zero   
+    jal hexasc            
     nop
     sb $v0, 4($s0)        # storing ascii character in timstr at index 4
 
