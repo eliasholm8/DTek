@@ -19,7 +19,7 @@ void print_number(int n){
 
 
 void print_seives(int n) {
-
+    // Input n is limited by the stack size (seems to be 2MB)
     struct bool numbers[n - 1];   // Creates a VLA, some bug doesn't recognise it, valid since C99
 
     for (int i = 0; i < n-1; i++)

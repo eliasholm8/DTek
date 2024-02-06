@@ -12,8 +12,8 @@ int list2[20];
 int count = 0; 
 
 void work(){
-  copycodes(text1, list1, &count);  // Int needs to be passed as pointer to be modifyable
-  copycodes(text2, list2, &count);
+  copycodes(text1, list1, &count);  // Int needs to be passed as pointer to be modifiable
+  copycodes(text2, list2, &count);  // text is defined as a pointer, the fist element of an array is a pointer to the first element
 }
 
 void copycodes(char* input, int* output, int* counter){

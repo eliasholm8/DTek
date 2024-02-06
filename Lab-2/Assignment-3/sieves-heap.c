@@ -26,7 +26,8 @@ void print_seives(int n) {
 
     if (numbers == NULL)    // Malloc returns null if unable to allocate memory
     {
-        printf("Failed");
+        printf("Failed\n");
+        exit(EXIT_FAILURE);
     } 
 
     for (int i = 0; i < n-1; i++)
