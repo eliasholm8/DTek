@@ -44,10 +44,10 @@ void print_primes(int n){
 
   for (int i = 2; i < n + 1; i++)
   {
-  if (is_prime(i))
-  {
-    print_number(i);
-  }
+    if (is_prime(i))
+    {
+      print_number(i);
+    }
   }
   printf("\n");
 }
@@ -56,10 +56,12 @@ void print_primes(int n){
 // 'argv' is an array of char pointers, where each
 // char pointer points to a null-terminated string.
 int main(int argc, char *argv[]){
-  if(argc == 2)
+  if(argc == 2) {
     print_primes(atoi(argv[1]));
-  else
+  }
+  else {
     printf("Please state an interger number.\n");
+  }
   return 0;
 }
 
