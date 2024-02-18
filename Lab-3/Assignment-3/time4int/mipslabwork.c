@@ -15,13 +15,16 @@
 #include "mipslab.h"  /* Declatations for these labs */
 
 int mytime = 0x5957;
+int prime = 1234567;
 
 char textstring[] = "text, more text, and even more text!";
 
 /* Interrupt Service Routine */
-void user_isr( void )
-{
-  return;
+void user_isr( void ) {
+time2string( textstring, mytime );
+display_string( 3, textstring );
+display_update();
+tick( &mytime );
 }
 
 
@@ -51,41 +54,8 @@ void labinit( void )
 
 int timeoutcount;
 /* This function is called repetitively from the main program */
-void labwork( void )
-{
-  volatile unsigned int *portE = (volatile unsigned int *)0xbf886110;
-
-  int sw = getsw();
-  int btns = getbtns();
-
-  if (btns & 0b0100) {
-    mytime &= 0x0fff;
-    mytime |= (sw << 12);
-  }
-  if (btns & 0b0010) {
-    mytime &= 0xf0ff;
-    mytime |= (sw << 8);
-  }
-  if (btns & 0b0001) {
-    mytime &= 0xff0f;
-    mytime |= (sw << 4);
-  }
-  
-  if (IFS(0) & 0x100)
-  {
-    IFSCLR(0) = 0x100;
-    timeoutcount++;
-    if (timeoutcount == 10)
-    {
-      time2string( textstring, mytime );
-      display_string( 3, textstring );
-      display_update();
-      tick( &mytime );
-      display_image(96, icon);
-      (*portE)=btns;   
-
-      timeoutcount = 0;
-      
-    }       
-  }  
+void labwork( void ) {
+prime = nextprime( prime );
+display_string( 0, itoaconv( prime ) );
+display_update();
 }
