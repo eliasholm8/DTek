@@ -19,12 +19,25 @@ int prime = 1234567;
 
 char textstring[] = "text, more text, and even more text!";
 
+int timeoutcount;
+
 /* Interrupt Service Routine */
 void user_isr( void ) {
-time2string( textstring, mytime );
-display_string( 3, textstring );
-display_update();
-tick( &mytime );
+  if (IFS(0) & 0x100)
+  {
+    IFSCLR(0) = 0x100;
+    timeoutcount++;
+
+    if (timeoutcount == 10)
+    {
+      time2string( textstring, mytime );
+      display_string( 3, textstring );
+      display_update();
+      tick( &mytime );
+
+      timeoutcount = 0;
+    }    
+  }  
 }
 
 
@@ -46,13 +59,15 @@ void labinit( void )
   //  80Mhz / 10 = 8M, 8M / 256 = 31250
   PR2 = 31250;
   TMR2 = 0x0;
-  IFS(0) = 0x0; // Set interrupt flag to 0
+  IFSCLR(0) = 0x100;  // Clear timer interrupt flag
+  IECSET(0) = 0x100;  // Enable interrupts for timer 2
   T2CONSET = 0x8000;  // Start timer
+
+  enable_interrupt();
 
   return;
 }
 
-int timeoutcount;
 /* This function is called repetitively from the main program */
 void labwork( void ) {
 prime = nextprime( prime );

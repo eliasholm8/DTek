@@ -126,3 +126,9 @@ time2string:
 
     jr $ra
     nop
+.globl enable_interrupt
+  enable_interrupt:
+
+    ei
+    jr $ra
+    nop
