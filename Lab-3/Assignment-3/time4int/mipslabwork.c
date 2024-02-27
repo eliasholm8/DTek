@@ -63,6 +63,12 @@ void labinit( void )
   IECSET(0) = 0x100;  // Enable interrupts for timer 2
   T2CONSET = 0x8000;  // Start timer
 
+  volatile unsigned int *IEC0 = (volatile unsigned int *) 0xbf881060;
+  volatile unsigned int *IPC2 = (volatile unsigned int *) 0xbf8810b0;
+
+  *IEC0 |= 0b100000000;
+  *IPC2 |= 0b1000000;
+
   enable_interrupt();
 
   return;
