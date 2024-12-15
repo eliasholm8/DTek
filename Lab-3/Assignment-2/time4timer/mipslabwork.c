@@ -82,7 +82,7 @@ void labwork( void )
       display_update();
       tick( &mytime );
       display_image(96, icon);
-      (*portE)=btns;   
+      (*portE)++;   
 
       timeoutcount = 0;
       

@@ -21,6 +21,9 @@ char textstring[] = "text, more text, and even more text!";
 
 int timeoutcount;
 
+volatile int *tris_E;
+volatile int *port_E;
+
 /* Interrupt Service Routine */
 void user_isr( void ) {
   if (IFS(0) & 0x100)
@@ -46,8 +49,10 @@ void labinit( void )
 {
 
   // IO stuff
-  volatile int *port_E = (volatile int *) 0xbf886100;
-  *port_E &= 0x00FF;  
+  port_E = (volatile int *) 0xbf886110;
+  tris_E = (volatile int *) 0xbf886100;
+  *port_E = 0x0;
+  *tris_E = *tris_E & 0xffffff00;
   
   TRISD &= 0x0fe0;
 
@@ -60,14 +65,13 @@ void labinit( void )
   PR2 = 31250;
   TMR2 = 0x0;
   IFSCLR(0) = 0x100;  // Clear timer interrupt flag
-  IECSET(0) = 0x100;  // Enable interrupts for timer 2
   T2CONSET = 0x8000;  // Start timer
 
-  volatile unsigned int *IEC0 = (volatile unsigned int *) 0xbf881060;
-  volatile unsigned int *IPC2 = (volatile unsigned int *) 0xbf8810b0;
+  IECSET(0) = 0x100;  // Enable interrupts for timer 2
+  IPCSET(2) = 0x1F;
+  IECSET(0) = 0x080;
+  IPCSET(1) = 0x1b00;
 
-  *IEC0 |= 0b100000000;
-  *IPC2 |= 0b1000000;
 
   enable_interrupt();
 
@@ -76,7 +80,7 @@ void labinit( void )
 
 /* This function is called repetitively from the main program */
 void labwork( void ) {
-prime = nextprime( prime );
-display_string( 0, itoaconv( prime ) );
-display_update();
+  prime = nextprime( prime );
+  display_string( 0, itoaconv( prime ) );
+  display_update();
 }
