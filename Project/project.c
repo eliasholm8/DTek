@@ -440,6 +440,10 @@ void reset_game() {
     update_screen();
 }
 
+int getbtns(){
+    return (PORTD >> 4) & 0x1E | ((PORTF >> 1) & 0x1);
+}
+
 void ball_handler() {
     bool right_scored = false;
 	bool left_scored = false;
@@ -502,9 +506,6 @@ void user_isr() {
     
 }
 
-int getbtns(){
-    return (PORTD >> 4) & 0x1E | ((PORTF >> 1) & 0x1);
-}
 
 void button_handler() {
     int buttons = getbtns();
