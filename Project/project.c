@@ -436,7 +436,7 @@ void reset_game() {
         frame[127][i] = (left_paddle.position >> i) & 0x1;
     }
     quicksleep(1000);
-    update_screen;
+    update_screen();
 }
 
 void ball_handler() {
@@ -488,7 +488,7 @@ void ball_handler() {
 		display_update();
 		quicksleep(500000);	// Wait a litte until button check
 
-		while (!getbtns())
+		while (!getbtns()) {}
 		reset_game();
 	}
 }
