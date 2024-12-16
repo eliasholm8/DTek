@@ -17,14 +17,14 @@
 #define DISPLAY_TURN_OFF_VBAT (PORTFSET = 0x20)
 
 typedef struct {
-    int x;
+    int x;	// Position of ball
     int y;
     bool x_dir; // true = right -> left
     bool y_dir;
 } Ball;
 
 typedef struct {
-    unsigned int position;
+    unsigned int position;	// Implemented as a bitmask
     bool is_left;
 } Paddle;
 
@@ -37,7 +37,7 @@ Ball ball = {64, 16, true, true};
 
 int left_score, right_score;
 
-uint8_t frame[128][32];
+uint8_t frame[128][32];	// Frame buffer
 
 uint8_t block[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -335,7 +335,7 @@ void update_screen() {
     const int rows_per_band = 8;   // Each band represents 8 vertical pixels.
     
     // block[] will hold data for a 32x32 region (4 bands of 8 rows and 32 columns)
-    // That's 32 columns * 4 bands = 128 bytes total.
+    // 32 columns * 4 bands = 128 bytes total.
 
     for (int strip = 0; strip < strips; strip++) {
         for (int band = 0; band < bands; band++) {
@@ -370,9 +370,10 @@ void update_screen() {
 
 
 void system_init() {
-
+	// Enable interrupts
 	asm("ei");
 
+	// Paddle setup
     left_paddle.position = ~paddle_const;
     left_paddle.is_left = true;
 
