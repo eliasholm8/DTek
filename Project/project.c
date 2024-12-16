@@ -401,7 +401,7 @@ void system_init() {
     T2CON = 0x8070;
 }
 
-// Usally avalible from stdlib
+// Usally avalible from stdlib but isn't for some reason
 int abs(int num) {
     return (num < 0) ? -num : num;
 }
@@ -440,7 +440,8 @@ void reset_game() {
 }
 
 void ball_handler() {
-    bool scored = false;
+    bool right_scored = false;
+	bool left_scored = false;
 
     frame[ball.x][ball.y] = 1;
 
@@ -463,24 +464,33 @@ void ball_handler() {
 
     if (ball.x == 0) {
         right_score++;
-        scored = true;
+        right_scored = true;
     }
 
     if (ball.x == 127) {
         left_score++;
-        scored = true;
+        left_scored = true;
     }
     
     
     frame[ball.x][ball.y] = 0;
 
-	if (scored)
-	{
-		//display_string(1, "test");
-		//quicksleep(INT32_MAX);
+	if (right_scored || left_scored) {
+		if (left_scored) {
+			display_string(1, "left wins");
+			display_string(2, "press any button");
+			display_string(3, "to continue");
+		} else if (right_scored) {
+			display_string(1, "right wins");
+			display_string(2, "press any button");
+			display_string(3, "to continue");
+		}
+		display_update();
+		quicksleep(500000);	// Wait a litte until button check
+
+		while (!getbtns())
+		reset_game();
 	}
-	
-	
 }
 
 void user_isr() {
@@ -539,7 +549,7 @@ int main(void) {
     
     while (true)
     {
-        button_handler();
+        button_handler();	// Read the buttons and move the paddles
     }
     
 }
