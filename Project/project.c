@@ -49,6 +49,10 @@ uint8_t block[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 /*Copied from canvas*/
 
+void quicksleep(int cyc) {
+	for(int i = cyc; i > 0; i--);
+}
+
 void init() {
        /*
 	  This will set the peripheral bus clock to the same frequency
@@ -226,6 +230,21 @@ const uint8_t const font[] = {
 	0, 120, 68, 66, 68, 120, 0, 0,
 };
 
+void display_string(int line, char *s) {
+	int i;
+	if(line < 0 || line >= 4)
+		return;
+	if(!s)
+		return;
+	
+	for(i = 0; i < 16; i++)
+		if(*s) {
+			textbuffer[line][i] = *s;
+			s++;
+		} else
+			textbuffer[line][i] = ' ';
+}
+
 uint8_t spi_send_recv(uint8_t data) {
 	while(!(SPI2STAT & 0x08));
 	SPI2BUF = data;
@@ -306,44 +325,28 @@ void display_image(int x, const uint8_t *data) {
 	}
 }
 
-void quicksleep(int cyc) {
-	int i;
-	for(i = cyc; i > 0; i--);
-}
 
-void set_block_bit(uint8_t *block, int col, int bit, int screen_value) {
-    if (screen_value) {
-        block[col] |= (1 << bit);  // Set the bit
-    } else {
-        block[col] &= ~(1 << bit); // Clear the bit
-    }
-}
+
 
 void update_screen() {
-    uint8_t block[32]; // Temporary block buffer for 32 pixels wide
-
-    for (int k = 0; k < 4; k++) {  // Rows of 8-pixel blocks
-        for (int l = 0; l < 4; l++) { // Columns of 32-pixel blocks
-            // Clear the block buffer
-            for (int i = 0; i < 32; i++) {
-                block[i] = 0;
-            }
-
-            // Fill the block buffer from the `screen` array
-            for (int j = 0; j < 8; j++) { // Pixels in each 8-pixel-high block
-                for (int i = 0; i < 32; i++) { // Pixels in each block column
-                    int screen_value = frame[i + (32 * l)][j + (8 * k)];
-                    set_block_bit(block, i, j, screen_value);
+    for (int k = 0; k < 4; k++) {  // rows of 8 bits
+        for (int l = 0; l < 4; l++) {
+            for (int j = 0; j < 8; j++) {  // pixels in each 8 bit high column
+                for (int i = 0; i < 32; i++) {  // columns in each block
+                    // https://stackoverflow.com/questions/47981/how-do-i-set-clear-and-toggle-a-single-bit#:~:text=Changing%20the%20nth%20bit%20to%20x
+                    block[i + (32 * l)] ^= (-frame[i + (32 * k)][j + (8 * l)] ^
+                                            block[i + (32 * l)]) &
+                                           (1UL << j);
                 }
             }
-
-            // Send the prepared block to the display
-            display_image((32 * k), block);
         }
+        display_image((32 * k), block);
     }
 }
 
 void system_init() {
+
+	asm("ei");
 
     left_paddle.position = ~paddle_const;
     left_paddle.is_left = true;
@@ -358,7 +361,7 @@ void system_init() {
         }       
     }   
 
-    TRISD = 0b1110000;
+    TRISD = 0b11100000;
     TRISF = 0b10;
     PORTD = 0;
     PORTF = 0;
@@ -371,7 +374,6 @@ void system_init() {
     TMR2 = 0x0;
     PR2 = 10000;
     T2CON = 0x8070;
-    //asm("ei");
 }
 
 // Usally avalible from stdlib
@@ -379,11 +381,11 @@ int abs(int num) {
     return (num < 0) ? -num : num;
 }
 
-void paddle_handler(Paddle *paddle, bool delta_h) {
+void paddle_handler(Paddle *paddle, int delta_h) {
 
     unsigned int new_paddle = ~(paddle->position);
 
-    new_paddle = (delta_h < 0) ? (new_paddle >> abs(delta_h)) : (new_paddle << delta_h);
+    new_paddle = (delta_h < 0) ? (new_paddle >> abs(delta_h)) : (new_paddle << abs(delta_h));
 
     paddle->position = ~new_paddle;
 
@@ -408,7 +410,7 @@ void reset_game() {
         frame[0][i] = (left_paddle.position >> i) & 0x1;
         frame[127][i] = (left_paddle.position >> i) & 0x1;
     }
-    quicksleep(100000);
+    quicksleep(1000);
     update_screen;
 }
 
@@ -444,8 +446,16 @@ void ball_handler() {
         scored = true;
     }
     
-    reset_game();
+    
     frame[ball.x][ball.y] = 0;
+
+	if (scored)
+	{
+		//display_string(1, "test");
+		//quicksleep(INT32_MAX);
+	}
+	
+	
 }
 
 void user_isr() {
@@ -456,29 +466,27 @@ void user_isr() {
     
 }
 
-int getbtns() {
-    return((PORTD >> 4) & 0xE) | ((PORTF >> 1) & 0x1);
+int getbtns(){
+    return (PORTD >> 4) & 0x1E | ((PORTF >> 1) & 0x1);
 }
 
 void button_handler() {
     int buttons = getbtns();
 
     if (buttons & 0b0001) {
-        if (right_paddle.position & 0x80000000) {
+        if (right_paddle.position & 0x1) {
             paddle_handler(&right_paddle, -1);
         }
-        
     }
 
     if (buttons & 0b0010) {
         if (right_paddle.position & 0x80000000) {
             paddle_handler(&right_paddle, 1);
         }
-        
     }
 
     if (buttons & 0b0100) {
-        if (left_paddle.position & 0x80000000) {
+        if (left_paddle.position & 0x1) {
             paddle_handler(&left_paddle, -1);
         }
     }
@@ -498,9 +506,11 @@ int main(void) {
     display_update();
     system_init();
 
-    paddle_handler(&left_paddle, 0);
-    paddle_handler(&right_paddle, 0);
+    paddle_handler(&left_paddle, 1);
+    paddle_handler(&right_paddle, 1);
     update_screen();
+	reset_game();
+	display_update();
     
     while (true)
     {
