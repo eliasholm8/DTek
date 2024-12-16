@@ -329,20 +329,45 @@ void display_image(int x, const uint8_t *data) {
 
 
 void update_screen() {
-    for (int k = 0; k < 4; k++) {  // rows of 8 bits
-        for (int l = 0; l < 4; l++) {
-            for (int j = 0; j < 8; j++) {  // pixels in each 8 bit high column
-                for (int i = 0; i < 32; i++) {  // columns in each block
-                    // https://stackoverflow.com/questions/47981/how-do-i-set-clear-and-toggle-a-single-bit#:~:text=Changing%20the%20nth%20bit%20to%20x
-                    block[i + (32 * l)] ^= (-frame[i + (32 * k)][j + (8 * l)] ^
-                                            block[i + (32 * l)]) &
-                                           (1UL << j);
+    const int strips = 4;          // The display is divided into 4 vertical strips of 32 columns each (128/32=4).
+    const int bands = 4;           // Each strip is divided into 4 horizontal bands of 8 pixels each (32/8=4).
+    const int columns_per_strip = 32;
+    const int rows_per_band = 8;   // Each band represents 8 vertical pixels.
+    
+    // block[] will hold data for a 32x32 region (4 bands of 8 rows and 32 columns)
+    // That's 32 columns * 4 bands = 128 bytes total.
+
+    for (int strip = 0; strip < strips; strip++) {
+        for (int band = 0; band < bands; band++) {
+            for (int pixel_row = 0; pixel_row < rows_per_band; pixel_row++) {
+                for (int col = 0; col < columns_per_strip; col++) {
+                    // Calculate the corresponding coordinates in the frame
+                    int frame_x = col + (columns_per_strip * strip);
+                    int frame_y = pixel_row + (rows_per_band * band);
+
+                    // Calculate where to store this bit in the block array
+                    int block_index = col + (columns_per_strip * band);
+
+                    // Get the pixel value from frame (0 or 1)
+                    uint8_t pixel_value = frame[frame_x][frame_y];
+                    uint8_t bit_mask = (1U << pixel_row);
+
+                    // Set or clear the bit in block based on the pixel value
+                    if (pixel_value == 1) {
+                        block[block_index] |= bit_mask;
+                    } else {
+                        block[block_index] &= ~bit_mask;
+                    }
                 }
             }
         }
-        display_image((32 * k), block);
+
+        // After filling all bands for this strip, draw it on the display
+        display_image((columns_per_strip * strip), block);
     }
 }
+
+
 
 void system_init() {
 
